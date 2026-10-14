@@ -252,8 +252,8 @@ impl ConCommandsArgs {
                         if let Some(ptr) = con_command_args.p_command_args.upgrade() {
                             let str_result = unsafe {CStr::from_ptr(
                                 afx_hook_source2_command_args_argv(*ptr, index)
-                            )}.to_str().unwrap();
-                            return Ok( js_value!(js_string!(str_result)));
+                            )}.to_string_lossy();
+                            return Ok( js_value!(js_string!(&*str_result)));
                         }
                     }
                 }
@@ -1189,7 +1189,7 @@ fn afx_relative_path_to_full_path(file_name: String) -> Option<String> {
     let mut str_full_path: Option<String> = None;
 
     if !full_path.is_null() {
-        str_full_path = Some(unsafe { CStr::from_ptr( afx_hook_source2_fs_cbufferstring_get(full_path) ) }.to_str().unwrap().to_string());
+        str_full_path = Some(unsafe { CStr::from_ptr( afx_hook_source2_fs_cbufferstring_get(full_path) ) }.to_string_lossy().into_owned());
         unsafe { afx_hook_source2_fs_cbufferstring_delete(full_path); }
     }
     
@@ -1221,7 +1221,7 @@ fn afx_get_entity_ref_name( p_ref: * mut AfxEntityRef) -> String {
     unsafe {
         result = afx_hook_source2_get_entity_ref_name(p_ref);
     }
-    return unsafe { CStr::from_ptr(result) }.to_str().unwrap().to_string() ;
+    return unsafe { CStr::from_ptr(result) }.to_string_lossy().into_owned() ;
 }
 
 fn afx_get_entity_ref_debug_name(p_ref: * mut AfxEntityRef) -> Option<String> {
@@ -1232,7 +1232,7 @@ fn afx_get_entity_ref_debug_name(p_ref: * mut AfxEntityRef) -> Option<String> {
     if result.is_null() {
          return None;
     }
-    return Some(unsafe { CStr::from_ptr(result) }.to_str().unwrap().to_string());
+    return Some(unsafe { CStr::from_ptr(result) }.to_string_lossy().into_owned());
 }
 
 fn afx_get_entity_ref_player_name(p_ref: * mut AfxEntityRef) -> Option<String> {
@@ -1243,7 +1243,7 @@ fn afx_get_entity_ref_player_name(p_ref: * mut AfxEntityRef) -> Option<String> {
     if result.is_null() {
          return None;
     }
-    return Some(unsafe { CStr::from_ptr(result) }.to_str().unwrap().to_string());
+    return Some(unsafe { CStr::from_ptr(result) }.to_string_lossy().into_owned());
 }
 
 
@@ -1255,7 +1255,7 @@ fn afx_get_entity_ref_sanitized_player_name(p_ref: * mut AfxEntityRef) -> Option
     if result.is_null() {
          return None;
     }
-    return Some(unsafe { CStr::from_ptr(result) }.to_str().unwrap().to_string());
+    return Some(unsafe { CStr::from_ptr(result) }.to_string_lossy().into_owned());
 }
 
 fn afx_get_entity_ref_class_name( p_ref: * mut AfxEntityRef) -> String {
@@ -1263,7 +1263,7 @@ fn afx_get_entity_ref_class_name( p_ref: * mut AfxEntityRef) -> String {
     unsafe {
         result = afx_hook_source2_get_entity_ref_class_name(p_ref);
     }
-    return unsafe { CStr::from_ptr(result) }.to_str().unwrap().to_string();
+    return unsafe { CStr::from_ptr(result) }.to_string_lossy().into_owned();
 }
 
 fn afx_get_entity_ref_client_class_name( p_ref: * mut AfxEntityRef) -> Option<String> {
@@ -1274,7 +1274,7 @@ fn afx_get_entity_ref_client_class_name( p_ref: * mut AfxEntityRef) -> Option<St
     if result.is_null() {
         return None;
     }    
-    return Some(unsafe { CStr::from_ptr(result) }.to_str().unwrap().to_string());
+    return Some(unsafe { CStr::from_ptr(result) }.to_string_lossy().into_owned());
 }
 
 
@@ -1416,7 +1416,7 @@ fn afx_get_demo_file_path() -> Option<String> {
     if result.is_null() {
          return None;
     }
-    return Some(unsafe { CStr::from_ptr(result) }.to_str().unwrap().to_string());
+    return Some(unsafe { CStr::from_ptr(result) }.to_string_lossy().into_owned());
 }
 
 fn afx_get_game_directory() -> Option<String> {
@@ -1427,7 +1427,7 @@ fn afx_get_game_directory() -> Option<String> {
     if result.is_null() {
          return None;
     }
-    return Some(unsafe { CStr::from_ptr(result) }.to_str().unwrap().to_string());
+    return Some(unsafe { CStr::from_ptr(result) }.to_string_lossy().into_owned());
 }
 
 #[derive(Debug, Trace, Finalize)]
@@ -3479,8 +3479,8 @@ fn afx_load_and_report_promise(file_path: &JsString, afx_loader: Rc<AfxSimpleMod
 pub unsafe extern "C" fn afx_hook_source2_rs_load<'a>(this_ptr: *mut AfxHookSource2Rs<'a>, file_path: *const c_char) {
     let context = (*afx_hooks_source_2_rs_ptr_to_ref(this_ptr).context).get();
     let loader = context.downcast_module_loader::<AfxSimpleModuleLoader>().unwrap().clone();
-    let str_file_path = unsafe{CStr::from_ptr(file_path)}.to_str().unwrap();
-    let js_str_path = js_string!(str_file_path);
+    let str_file_path = unsafe{CStr::from_ptr(file_path)}.to_string_lossy();
+    let js_str_path = js_string!(&*str_file_path);
     if let Err(err) = afx_load_and_report_promise(&js_str_path, loader, context) {
         let _ = afx_on_error(&err, context);
     }
@@ -3492,8 +3492,8 @@ pub unsafe extern "C" fn afx_hook_source2_rs_on_record_start<'a>(this_ptr: *mut 
 
     let mut js_value_take_folder_path: JsValue = JsValue::null();
     if !taker_folder_path.is_null() {
-        let str_take_folder_path = unsafe{CStr::from_ptr(taker_folder_path)}.to_str().unwrap();
-        js_value_take_folder_path = js_value!(js_string!(str_take_folder_path));
+        let str_take_folder_path = unsafe{CStr::from_ptr(taker_folder_path)}.to_string_lossy();
+        js_value_take_folder_path = js_value!(js_string!(&*str_take_folder_path));
     }
 
     if let Err(e) = advancedfx::js::events::EventSource::obj_dispatch(
@@ -3526,17 +3526,20 @@ pub unsafe extern "C" fn afx_hook_source2_rs_on_record_end<'a>(this_ptr: *mut Af
 pub unsafe extern "C" fn afx_hook_source2_rs_on_game_event<'a>(this_ptr: *mut AfxHookSource2Rs<'a>, event_name: *const c_char, event_id: i32, json: *const c_char) {
     let context = (*afx_hooks_source_2_rs_ptr_to_ref(this_ptr).context).get();
 
-    let str_event_name = unsafe{CStr::from_ptr(event_name)}.to_str().unwrap();
-    let str_json = unsafe{CStr::from_ptr(json)}.to_str().unwrap();
+    let str_event_name = unsafe{CStr::from_ptr(event_name)}.to_string_lossy();
+    let str_json = unsafe{CStr::from_ptr(json)}.to_string_lossy();
+    if matches!(str_json, std::borrow::Cow::Owned(_)) {
+        afx_warning(format!("AFXWARNING: Game event {} has invalid UTF-8.\n", str_event_name));
+    }
 
     if let Err(e) = advancedfx::js::events::EventSource::obj_dispatch(
         &afx_hooks_source_2_rs_ptr_to_ref(this_ptr).events.game_event,
         context,
         JsValue::undefined(),
         HashMap::from([
-            (js_string!("name"), js_value!(js_string!(str_event_name))),
+            (js_string!("name"), js_value!(js_string!(&*str_event_name))),
             (js_string!("id"),  js_value!(event_id)),
-            (js_string!("data"), js_value!(js_string!(str_json)))
+            (js_string!("data"), js_value!(js_string!(&*str_json)))
         ])
     ) {
         let _ = afx_on_error(&e, context);

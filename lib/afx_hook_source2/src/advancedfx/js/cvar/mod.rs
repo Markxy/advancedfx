@@ -134,7 +134,7 @@ impl CVar {
             advancedfx::cvar::CVarType::String => {
                 let mut result: *const c_char = std::ptr::null();
                 if unsafe {advancedfx::cvar::afx_hook_source2_get_convar_string(p_cvar,get_mode_i8,&mut result)} {
-                    return Ok(js_value!(js_string!(unsafe { CStr::from_ptr(result) }.to_str().unwrap().to_string())));
+                    return Ok(js_value!(js_string!(unsafe { CStr::from_ptr(result) }.to_string_lossy().into_owned())));
                 }                        
             }
             advancedfx::cvar::CVarType::Color => {
@@ -406,7 +406,7 @@ impl CVar {
         let mut result: *const c_char = std::ptr::null();
         if unsafe {advancedfx::cvar::afx_hook_source2_get_convar_name(p_cvar,&mut result)} {
             if !result.is_null() {
-                return Ok(js_value!(js_string!(unsafe { CStr::from_ptr(result) }.to_str().unwrap().to_string())));
+                return Ok(js_value!(js_string!(unsafe { CStr::from_ptr(result) }.to_string_lossy().into_owned())));
             }
         }
 
@@ -420,7 +420,7 @@ impl CVar {
         let mut result: *const c_char = std::ptr::null();
         if unsafe {advancedfx::cvar::afx_hook_source2_get_convar_help_string(p_cvar,&mut result)} {
             if !result.is_null() {
-                return Ok(js_value!(js_string!(unsafe { CStr::from_ptr(result) }.to_str().unwrap().to_string())));
+                return Ok(js_value!(js_string!(unsafe { CStr::from_ptr(result) }.to_string_lossy().into_owned())));
             }
         }
 
