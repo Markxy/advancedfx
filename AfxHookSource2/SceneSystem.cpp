@@ -969,7 +969,8 @@ void __fastcall new_InitDrawingData(unsigned char * pDrawingData,void *pSceneVie
 
 	void * pCRenderContextDx11_SoftwareCommandList = ((void **)pDrawingData)[4];
 
-	if(org_SoftwareCommandList_Commit == nullptr) {
+	static std::once_flag commitDetourOnce;
+	std::call_once(commitDetourOnce, [pCRenderContextDx11_SoftwareCommandList]() {
 		void** vtable = *(void***)pCRenderContextDx11_SoftwareCommandList;
 		org_SoftwareCommandList_Commit = (SoftwareCommandList_Commit_t)vtable[11];
 
@@ -980,9 +981,8 @@ void __fastcall new_InitDrawingData(unsigned char * pDrawingData,void *pSceneVie
 
 		if(NO_ERROR != DetourTransactionCommit()) {
 			ErrorBox("Failed to detour SoftwareCommandList::Commit.");
-			return;
-		}				
-	}
+		}
+	});
 
 	if(0 == strcmp(context.ViewPass,"PostProcessing")) {
 		QueueCallbackBeforePostProcessing(pCRenderContextDx11_SoftwareCommandList);
